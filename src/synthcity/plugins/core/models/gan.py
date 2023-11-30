@@ -253,6 +253,7 @@ class GAN(nn.Module):
         cond: Optional[np.ndarray] = None,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
+        data_weights: np.array = None,
     ) -> "GAN":
         clear_cache()
 
@@ -280,6 +281,7 @@ class GAN(nn.Module):
             condt,
             fake_labels_generator=fake_labels_generator,
             true_labels_generator=true_labels_generator,
+            data_weights=data_weights,
         )
 
         return self
@@ -338,6 +340,7 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor],
         fake_labels_generator: Callable,
         true_labels_generator: Callable,
+        data_weights: np.array,
     ) -> float:
         # Update the G network
         self.generator.train()
@@ -347,6 +350,9 @@ class GAN(nn.Module):
         real_X = self._append_optional_cond(real_X_raw, cond)
         batch_size = len(real_X)
 
+        # Size of real_X
+        print("size of real_X: ", real_X.size())
+
         noise = torch.randn(batch_size, self.n_units_latent, device=self.device)
         noise = self._append_optional_cond(noise, cond)
 
@@ -354,8 +360,18 @@ class GAN(nn.Module):
         fake = self._append_optional_cond(fake_raw, cond)
 
         output = self.discriminator(fake).squeeze().float()
+
+        # If data_weights are available, use them to weight the loss
+        print("size of output in generator training: ", output.size())
+        #if data_weights is not None:
+            #print("reweight samples")
+            #data_weights = torch.from_numpy(data_weights)
+            #output = torch.mul(output, data_weights)
+        
+
         # Calculate G's loss based on this output
         errG = -torch.mean(output)
+        print("Size of errG after mean: ", errG.size())
         for extra_loss in self.generator_extra_penalty_cbks:
             errG += extra_loss(
                 real_X_raw,
@@ -392,6 +408,7 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor],
         fake_labels_generator: Callable,
         true_labels_generator: Callable,
+        data_weights: np.array,
     ) -> float:
         # Update the D network
         self.discriminator.train()
@@ -399,6 +416,8 @@ class GAN(nn.Module):
         errors = []
 
         batch_size = min(self.batch_size, len(X))
+
+        print("discriminator training X size: ", X.size())
 
         for epoch in range(self.discriminator_n_iter):
             # Train with all-real batch
@@ -473,6 +492,7 @@ class GAN(nn.Module):
         loader: DataLoader,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
+        data_weights: np.array = None,
     ) -> Tuple[float, float]:
         if fake_labels_generator is None:
             fake_labels_generator = self.fake_labels_generator
@@ -495,6 +515,7 @@ class GAN(nn.Module):
                     cond,
                     fake_labels_generator=fake_labels_generator,
                     true_labels_generator=true_labels_generator,
+                    data_weights=data_weights,
                 )
             )
             G_losses.append(
@@ -503,6 +524,7 @@ class GAN(nn.Module):
                     cond,
                     fake_labels_generator=fake_labels_generator,
                     true_labels_generator=true_labels_generator,
+                    data_weights=data_weights,
                 )
             )
 
@@ -551,7 +573,7 @@ class GAN(nn.Module):
 
         return score, patience, save
 
-    def _train_test_split(self, X: torch.Tensor, cond: Optional[torch.Tensor]) -> Tuple:
+    def _train_test_split(self, X: torch.Tensor, cond: Optional[torch.Tensor], data_weights: Optional[np.array]) -> Tuple:
         if self.patience_metric is None:
             return X, None, cond, None
 
@@ -568,6 +590,24 @@ class GAN(nn.Module):
         if cond is not None:
             cond_train, cond_test = cond[train_idx], cond[test_idx]
 
+        # If data_weights are provided, sample the full train data with those weights correspondingly
+        if data_weights is not None:
+            assert(len(data_weights) == len(total))
+            print("Sampling with data weights!")
+            data_weights = torch.from_numpy(data_weights)
+            indices = torch.multinomial(data_weights, split, replacement=True)
+            # Create train set based on the sampling
+            X_train = X[indices]
+            # Get val set from remaining indices that weren't used in train set
+            total = torch.from_numpy(total)
+            test_indices = ~torch.isin(total, indices)
+            X_val = X[test_indices]
+            print("train indices: ", indices)
+            print("val indices: ", test_indices)
+            # Check cond
+            if cond is not None:
+                cond_train, cond_test = cond[indices], cond[test_indices]
+
         return X_train, X_val, cond_train, cond_test
 
     def _train(
@@ -576,11 +616,12 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor] = None,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
+        data_weights: np.array = None,
     ) -> "GAN":
         self._original_cond = cond
 
         X = self._check_tensor(X).float()
-        X, X_val, cond, cond_val = self._train_test_split(X, cond)
+        X, X_val, cond, cond_val = self._train_test_split(X, cond, data_weights=data_weights)
 
         # Load Dataset
         loader = self.dataloader(X, cond)
@@ -617,6 +658,7 @@ class GAN(nn.Module):
                 loader,
                 fake_labels_generator=fake_labels_generator,
                 true_labels_generator=true_labels_generator,
+                data_weights=data_weights,
             )
             # Check how the generator is doing by saving G's output on fixed_noise
             if (i + 1) % self.n_iter_print == 0:

@@ -275,7 +275,12 @@ class CTGANPlugin(Plugin):
             n_iter_print=self.n_iter_print,
             adjust_inference_sampling=self.adjust_inference_sampling,
         )
-        self.model.fit(X.dataframe(), cond=cond)
+        print("*******************Training CTGAN plugin**************************")
+        if "data_weights" in kwargs:
+            print("Training with weights")
+            self.model.fit(X.dataframe(), cond=cond, data_weights=data_weights)
+        else:
+            self.model.fit(X.dataframe(), cond=cond)
 
         return self
 
