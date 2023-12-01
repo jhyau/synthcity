@@ -278,6 +278,8 @@ class CTGANPlugin(Plugin):
         print("*******************Training CTGAN plugin**************************")
         if "data_weights" in kwargs:
             print("Training with weights")
+            data_weights = kwargs["data_weights"]
+            print("data_weights passed into ctgan: ", data_weights)
             self.model.fit(X.dataframe(), cond=cond, data_weights=data_weights)
         else:
             self.model.fit(X.dataframe(), cond=cond)

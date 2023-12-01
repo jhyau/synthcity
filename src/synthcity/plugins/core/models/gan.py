@@ -253,7 +253,7 @@ class GAN(nn.Module):
         cond: Optional[np.ndarray] = None,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
-        data_weights: np.array = None,
+        data_weights: Optional[np.array] = None,
     ) -> "GAN":
         clear_cache()
 
@@ -340,7 +340,7 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor],
         fake_labels_generator: Callable,
         true_labels_generator: Callable,
-        data_weights: np.array,
+        data_weights: Optional[np.array],
     ) -> float:
         # Update the G network
         self.generator.train()
@@ -408,7 +408,7 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor],
         fake_labels_generator: Callable,
         true_labels_generator: Callable,
-        data_weights: np.array,
+        data_weights: Optional[np.array],
     ) -> float:
         # Update the D network
         self.discriminator.train()
@@ -492,7 +492,7 @@ class GAN(nn.Module):
         loader: DataLoader,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
-        data_weights: np.array = None,
+        data_weights: Optional[np.array] = None,
     ) -> Tuple[float, float]:
         if fake_labels_generator is None:
             fake_labels_generator = self.fake_labels_generator
@@ -616,7 +616,7 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor] = None,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
-        data_weights: np.array = None,
+        data_weights: Optional[np.array] = None,
     ) -> "GAN":
         self._original_cond = cond
 

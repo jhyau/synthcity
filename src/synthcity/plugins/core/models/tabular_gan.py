@@ -331,7 +331,7 @@ class TabularGAN(torch.nn.Module):
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
         encoded: bool = False,
-        data_weights: np.array = None,
+        data_weights: Optional[np.array] = None,
     ) -> Any:
         # preprocessing
         if encoded:

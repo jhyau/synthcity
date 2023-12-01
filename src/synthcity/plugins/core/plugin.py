@@ -583,6 +583,7 @@ class PluginLoader:
         ptype = plugin.parent.name
 
         module_name = f"synthcity.plugins.{ptype}.{name}"
+        print("loading module: ", module_name)
 
         failed = False
         for retry in range(2):
@@ -695,6 +696,8 @@ class PluginLoader:
             The new object
         """
         self._refresh()
+        print("self._plugins: ", self._plugins)
+        print("self._available_plugins: ", self._available_plugins)
         if name not in self._plugins and name not in self._available_plugins:
             raise ValueError(f"Plugin {name} doesn't exist.")
 
