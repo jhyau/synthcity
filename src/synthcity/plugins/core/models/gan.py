@@ -253,7 +253,7 @@ class GAN(nn.Module):
         cond: Optional[np.ndarray] = None,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
-        data_weights: Optional[np.array] = None,
+        data_weights: Optional[np.ndarray] = None,
     ) -> "GAN":
         clear_cache()
 
@@ -340,7 +340,7 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor],
         fake_labels_generator: Callable,
         true_labels_generator: Callable,
-        data_weights: Optional[np.array],
+        data_weights: Optional[np.ndarray],
     ) -> float:
         # Update the G network
         self.generator.train()
@@ -408,7 +408,7 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor],
         fake_labels_generator: Callable,
         true_labels_generator: Callable,
-        data_weights: Optional[np.array],
+        data_weights: Optional[np.ndarray],
     ) -> float:
         # Update the D network
         self.discriminator.train()
@@ -492,7 +492,7 @@ class GAN(nn.Module):
         loader: DataLoader,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
-        data_weights: Optional[np.array] = None,
+        data_weights: Optional[np.ndarray] = None,
     ) -> Tuple[float, float]:
         if fake_labels_generator is None:
             fake_labels_generator = self.fake_labels_generator
@@ -573,7 +573,7 @@ class GAN(nn.Module):
 
         return score, patience, save
 
-    def _train_test_split(self, X: torch.Tensor, cond: Optional[torch.Tensor], data_weights: Optional[np.array]) -> Tuple:
+    def _train_test_split(self, X: torch.Tensor, cond: Optional[torch.Tensor], data_weights: Optional[np.ndarray]) -> Tuple:
         if self.patience_metric is None:
             return X, None, cond, None
 
@@ -616,7 +616,7 @@ class GAN(nn.Module):
         cond: Optional[torch.Tensor] = None,
         fake_labels_generator: Optional[Callable] = None,
         true_labels_generator: Optional[Callable] = None,
-        data_weights: Optional[np.array] = None,
+        data_weights: Optional[np.ndarray] = None,
     ) -> "GAN":
         self._original_cond = cond
 

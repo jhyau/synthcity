@@ -610,7 +610,10 @@ class PluginLoader:
                 failed = False
                 break
             except BaseException as e:
+                import traceback
                 log.critical(f"load failed: {e}")
+                log.critical(f"stacktrace: {traceback.format_exc()}")
+                log.critical(f"print stack: {traceback.print_stack()}")
                 failed = True
 
         if failed:
