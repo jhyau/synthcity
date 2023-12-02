@@ -351,7 +351,7 @@ class GAN(nn.Module):
         batch_size = len(real_X)
 
         # Size of real_X
-        print("size of real_X: ", real_X.size())
+        #print("size of real_X: ", real_X.size())
 
         noise = torch.randn(batch_size, self.n_units_latent, device=self.device)
         noise = self._append_optional_cond(noise, cond)
@@ -362,7 +362,7 @@ class GAN(nn.Module):
         output = self.discriminator(fake).squeeze().float()
 
         # If data_weights are available, use them to weight the loss
-        print("size of output in generator training: ", output.size())
+        #print("size of output in generator training: ", output.size())
         #if data_weights is not None:
             #print("reweight samples")
             #data_weights = torch.from_numpy(data_weights)
@@ -371,7 +371,7 @@ class GAN(nn.Module):
 
         # Calculate G's loss based on this output
         errG = -torch.mean(output)
-        print("Size of errG after mean: ", errG.size())
+        #print("Size of errG after mean: ", errG.size())
         for extra_loss in self.generator_extra_penalty_cbks:
             errG += extra_loss(
                 real_X_raw,
@@ -417,7 +417,7 @@ class GAN(nn.Module):
 
         batch_size = min(self.batch_size, len(X))
 
-        print("discriminator training X size: ", X.size())
+        #print("discriminator training X size: ", X.size())
 
         for epoch in range(self.discriminator_n_iter):
             # Train with all-real batch
@@ -578,6 +578,7 @@ class GAN(nn.Module):
             return X, None, cond, None
 
         if self.dataloader_sampler is not None:
+            print("using dataloader sampler")
             train_idx, test_idx = self.dataloader_sampler.train_test()
         else:
             total = np.arange(0, len(X))
@@ -590,10 +591,15 @@ class GAN(nn.Module):
         if cond is not None:
             cond_train, cond_test = cond[train_idx], cond[test_idx]
 
+        print(f"Full X shape: {X.shape}, X_train shape: {X_train.shape}, X_val shape: {X_val.shape}")
         # If data_weights are provided, sample the full train data with those weights correspondingly
         if data_weights is not None:
+            total = np.arange(0, len(X))
+            #split = int(len(total) * 0.8)
+            split = X_train.shape[0]
             assert(len(data_weights) == len(total))
             print("Sampling with data weights!")
+            np_indices = np.random.choice(total, size=split, replace=True, p=data_weights)
             data_weights = torch.from_numpy(data_weights)
             indices = torch.multinomial(data_weights, split, replacement=True)
             # Create train set based on the sampling
@@ -603,7 +609,9 @@ class GAN(nn.Module):
             test_indices = ~torch.isin(total, indices)
             X_val = X[test_indices]
             print("train indices: ", indices)
+            print("np version train indices: ", np_indices)
             print("val indices: ", test_indices)
+            print(f"X_train after sampling: {X_train.shape} and X_val: {X_val.shape}")
             # Check cond
             if cond is not None:
                 cond_train, cond_test = cond[indices], cond[test_indices]

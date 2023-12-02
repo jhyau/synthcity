@@ -583,7 +583,7 @@ class PluginLoader:
         ptype = plugin.parent.name
 
         module_name = f"synthcity.plugins.{ptype}.{name}"
-        print("loading module: ", module_name)
+        #print("loading module: ", module_name)
 
         failed = False
         for retry in range(2):
@@ -612,8 +612,8 @@ class PluginLoader:
             except BaseException as e:
                 import traceback
                 log.critical(f"load failed: {e}")
-                log.critical(f"stacktrace: {traceback.format_exc()}")
-                log.critical(f"print stack: {traceback.print_stack()}")
+                #log.critical(f"stacktrace: {traceback.format_exc()}")
+                #log.critical(f"print stack: {traceback.print_stack()}")
                 failed = True
 
         if failed:
